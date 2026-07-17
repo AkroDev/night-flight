@@ -11,3 +11,19 @@ canvas {
   background-color: #0b1035;
   border: 2px solid #3a4a8f;
 }
+
+.back-link {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  font-family: sans-serif;
+  font-size: 13px;
+  color: #dfe6f0;
+  opacity: 0.35;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.back-link:hover {
+  opacity: 1;
+}

@@ -76,11 +76,12 @@ const translations = {
 const language = navigator.language.toLowerCase().startsWith('en') ? 'en' : 'fr';
 const t = translations[language];
 document.documentElement.lang = language;
+document.getElementById('backLink').href = `https://www.akrolabs.fr/${language}/labs/`;
 
 const unit = 10; // taille d'un "bloc" du pixel art, partagée par l'avion et les immeubles
 
 const baseSpeed = 3;
-const maxLives = 3;
+const baseDescentStep = 10;
 
 const plane = {
   x: 0,
@@ -89,14 +90,19 @@ const plane = {
   height: 20,
   speed: baseSpeed,
   direction: 1, // 1 = vers la droite, -1 = vers la gauche
-  descentStep: 10, // de combien l'avion descend à chaque sortie d'écran
+  descentStep: baseDescentStep, // de combien l'avion descend à chaque sortie d'écran
   landingSpeed: 2, // vitesse de descente une fois tous les immeubles détruits
   isLanding: false
 };
 
-// +1% de vitesse par niveau
+// +5% de vitesse par niveau
 function speedForLevel(currentLevel) {
-  return baseSpeed * Math.pow(1.01, currentLevel - 1);
+  return baseSpeed * Math.pow(1.05, currentLevel - 1);
+}
+
+// +5% de descente par passage par niveau : de moins en moins de passages avant le risque de collision
+function descentStepForLevel(currentLevel) {
+  return baseDescentStep * Math.pow(1.05, currentLevel - 1);
 }
 
 let score = 0;
@@ -153,9 +159,11 @@ function createBuildings() {
 
 const maxLevel = 10;
 
-// de 5 bombes au niveau 1 à 1 seule bombe au niveau 9+, baisse d'1 bombe tous les 2 niveaux
+// 5 bombes aux niveaux 1-2, 4 aux niveaux 3-4, 3 à partir du niveau 5
 function bombsForLevel(currentLevel) {
-  return Math.max(1, 5 - Math.floor((currentLevel - 1) / 2));
+  if (currentLevel <= 2) return 5;
+  if (currentLevel <= 4) return 4;
+  return 3;
 }
 
 // niveau 1 : hommage monochrome jaune/noir au Blitz original
@@ -349,6 +357,7 @@ function applyLevelSettings() {
   bombColor = bombColorForLevel(level);
   backgroundColor = backgroundColorForLevel(level);
   plane.speed = speedForLevel(level);
+  plane.descentStep = descentStepForLevel(level);
 }
 
 function startGame() {
@@ -385,7 +394,6 @@ function checkPlaneCollision() {
 
 function startNextLevel() {
   level = Math.min(level + 1, maxLevel);
-  lives = Math.min(lives + 1, maxLives);
   applyLevelSettings();
   playLevelUpSound();
 
