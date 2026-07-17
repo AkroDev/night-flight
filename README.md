@@ -19,6 +19,7 @@ Clin d'œil au *Blitz* original : le niveau 1 reprend sa palette monochrome jaun
 ## Stack technique
 
 - HTML5 Canvas + JavaScript vanilla — aucune dépendance, aucun bundler
+- Code organisé en modules ES natifs (`import`/`export`), directement supportés par le navigateur
 - Son synthétisé à la volée via la Web Audio API (pas de fichiers audio)
 
 ## Lancer en local
@@ -43,7 +44,9 @@ Déployé sur Vercel (`night-flight-eight.vercel.app`), et exposé sous `akrolab
 .
 ├── index.html      # Page unique, canvas de jeu
 ├── style.css       # Mise en page + lien retour discret
-├── game.js         # Toute la logique du jeu
+├── game.js         # État du jeu, physique, rendu, collisions (module ES)
+├── audio.js        # Sons synthétisés (Web Audio API)
+├── i18n.js         # Traductions FR/EN + détection de langue
 └── assets/
     └── plane.png
 ```
