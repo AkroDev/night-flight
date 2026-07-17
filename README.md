@@ -35,7 +35,7 @@ puis ouvrir `http://localhost:8000`.
 
 ## Déploiement
 
-Déployé sur Vercel (`night-flight-eight.vercel.app`), et exposé sous `akrolabs.fr/games/night-fall/` via un rewrite configuré dans le repo [akrolabs](https://github.com/AkroDev/akrolabs) (`vercel.json`).
+Déployé sur Vercel (`night-flight-eight.vercel.app`), et exposé sous `akrolabs.fr/games/night-fall/` via un rewrite configuré dans le repo `akrolabs` (`vercel.json`, dépôt privé).
 
 ## Structure du projet
 
