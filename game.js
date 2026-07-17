@@ -76,7 +76,18 @@ const translations = {
 const language = navigator.language.toLowerCase().startsWith('en') ? 'en' : 'fr';
 const t = translations[language];
 document.documentElement.lang = language;
-document.getElementById('backLink').href = `https://www.akrolabs.fr/${language}/labs/`;
+// vers /labs si on vient bien d'akrolabs.fr (contexte "retour"), sinon vers l'accueil
+// (ex: lien direct depuis GitHub) où /labs n'aurait aucun sens de "retour"
+const backLink = document.getElementById('backLink');
+const cameFromAkrolabs = document.referrer.includes('akrolabs.fr');
+
+if (cameFromAkrolabs) {
+  backLink.href = `https://www.akrolabs.fr/${language}/labs/`;
+  backLink.textContent = '← Labs';
+} else {
+  backLink.href = `https://www.akrolabs.fr/${language}/`;
+  backLink.textContent = '← akrolabs.fr';
+}
 
 const unit = 10; // taille d'un "bloc" du pixel art, partagée par l'avion et les immeubles
 
