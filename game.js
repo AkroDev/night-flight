@@ -49,8 +49,10 @@ let score = 0;
 let level = 1;
 let lives = 3;
 
-// 'start' = écran d'accueil, 'playing' = en jeu, 'crashed' = pause après un crash,
-// 'enterName' = saisie du pseudo, 'result' = fin de run (victoire ou défaite) + classement
+// 'start' = écran d'accueil, 'intro' = histoire (une fois, avant le niveau 1),
+// 'levelIntro' = écran de mission avant chaque niveau, 'playing' = en jeu,
+// 'crashed' = pause après un crash, 'enterName' = saisie du pseudo,
+// 'result' = fin de run (victoire ou défaite) + classement
 let gameState = 'start';
 let outcomeTitle = ''; // t.youWin ou t.gameOver, affiché sur les écrans 'enterName' et 'result'
 
@@ -74,6 +76,7 @@ let leaderboard = loadLeaderboard();
 let playerInitials = ['A', 'A', 'A'];
 let initialsSlotIndex = 0;
 let pendingScore = 0;
+let showLeaderboard = false; // affiché sur l'écran d'accueil via TAB
 
 let crashTimer = 0;
 const crashDuration = 90; // en frames, ~1.5s à 60fps
@@ -162,6 +165,10 @@ function dropBomb() {
 function handleAction() {
   if (gameState === 'start' || gameState === 'result') {
     startGame();
+  } else if (gameState === 'intro') {
+    gameState = 'levelIntro';
+  } else if (gameState === 'levelIntro') {
+    gameState = 'playing';
   } else if (gameState === 'playing') {
     dropBomb();
   }
@@ -223,6 +230,12 @@ function winGame() {
 document.addEventListener('keydown', (event) => {
   if (event.code === 'Escape') {
     gameState = 'start';
+    return;
+  }
+
+  if (event.code === 'Tab' && gameState === 'start') {
+    event.preventDefault();
+    showLeaderboard = !showLeaderboard;
     return;
   }
 
@@ -304,6 +317,7 @@ function startGame() {
   score = 0;
   level = 1;
   lives = 3;
+  showLeaderboard = false;
   applyLevelSettings();
 
   createBuildings();
@@ -311,7 +325,7 @@ function startGame() {
   plane.isLanding = false;
   bombs = [];
 
-  gameState = 'playing';
+  gameState = 'intro';
 }
 
 function checkPlaneCollision() {
@@ -341,6 +355,8 @@ function startNextLevel() {
   resetPlane();
   plane.isLanding = false;
   bombs = [];
+
+  gameState = 'levelIntro';
 }
 
 function updateBombs() {
@@ -524,11 +540,59 @@ function createTitleSkyline() {
 createTitleSkyline();
 
 function drawTitleSkyline() {
-  ctx.fillStyle = 'rgba(74, 90, 159, 0.5)';
+  // silhouette façon niveau 1 (jaune sur noir), pour donner un aperçu du jeu dès l'accueil
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = 'rgba(242, 201, 76, 0.55)';
 
   for (const building of titleSkyline) {
     ctx.fillRect(building.x, canvas.height - building.height, building.width, building.height);
   }
+}
+
+function drawIntro() {
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = '#dfe6f0';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '18px monospace';
+
+  const lineHeight = 28;
+  const lines = t.introStory;
+  const startY = canvas.height / 2 - ((lines.length - 1) * lineHeight) / 2;
+
+  lines.forEach((line, index) => {
+    ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
+  });
+
+  ctx.font = '14px monospace';
+  ctx.fillText(t.startPrompt, canvas.width / 2, canvas.height - 40);
+}
+
+function drawLevelIntro() {
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = '#dfe6f0';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const mission = t.missions[level - 1];
+
+  ctx.font = '28px monospace';
+  ctx.fillText(t.level(level), canvas.width / 2, canvas.height / 2 - 70);
+
+  ctx.font = '30px monospace';
+  ctx.fillText(mission.city, canvas.width / 2, canvas.height / 2 - 10);
+
+  ctx.font = '16px monospace';
+  ctx.fillText(mission.tagline, canvas.width / 2, canvas.height / 2 + 40);
+
+  ctx.font = '14px monospace';
+  ctx.fillText(t.startPrompt, canvas.width / 2, canvas.height - 40);
 }
 
 function drawStartScreen() {
@@ -537,21 +601,39 @@ function drawStartScreen() {
   ctx.fillStyle = '#dfe6f0';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-
-  const titleY = 45;
-  const promptY = canvas.height - 60;
-
-  // classement centré dans l'espace restant entre le titre et le message du bas
-  const leaderboardBlockHeight = (leaderboardSize - 1) * leaderboardRowHeight;
-  const leaderboardStartY = titleY + (promptY - titleY - leaderboardBlockHeight) / 2;
-
   ctx.font = '40px monospace';
-  ctx.fillText(t.title, canvas.width / 2, titleY);
 
-  drawLeaderboardList(leaderboardStartY);
+  if (showLeaderboard) {
+    const titleY = 45;
+    const promptY = canvas.height - 85;
 
-  ctx.font = '16px monospace';
-  ctx.fillText(t.startPrompt, canvas.width / 2, promptY);
+    ctx.fillText(t.title, canvas.width / 2, titleY);
+
+    // classement centré dans l'espace restant entre le titre et le message du bas
+    const leaderboardBlockHeight = (leaderboardSize - 1) * leaderboardRowHeight;
+    const leaderboardStartY = titleY + (promptY - titleY - leaderboardBlockHeight) / 2;
+    drawLeaderboardList(leaderboardStartY);
+
+    ctx.fillStyle = '#dfe6f0';
+    ctx.font = '16px monospace';
+    ctx.fillText(t.startPrompt, canvas.width / 2, promptY);
+
+    ctx.font = '14px monospace';
+    ctx.fillText(t.leaderboardBackHint, canvas.width / 2, promptY + 28);
+  } else {
+    const titleY = canvas.height / 2 - 60;
+    const promptY = titleY + 90;
+    const hintY = promptY + 32;
+
+    ctx.fillText(t.title, canvas.width / 2, titleY);
+
+    ctx.font = '16px monospace';
+    ctx.fillText(t.startPrompt, canvas.width / 2, promptY);
+
+    ctx.font = '14px monospace';
+    ctx.fillStyle = '#8f9bc7';
+    ctx.fillText(t.leaderboardHint, canvas.width / 2, hintY);
+  }
 }
 
 function drawNameEntry() {
@@ -597,6 +679,16 @@ function draw() {
 
   if (gameState === 'start') {
     drawStartScreen();
+    return;
+  }
+
+  if (gameState === 'intro') {
+    drawIntro();
+    return;
+  }
+
+  if (gameState === 'levelIntro') {
+    drawLevelIntro();
     return;
   }
 
